@@ -31,8 +31,9 @@ import (
 type (
 	// KafkaConfig describes the configuration needed to connect to all kafka clusters
 	KafkaConfig struct {
-		Clusters map[string]ClusterConfig `yaml:"clusters"`
-		Topics   map[string]TopicConfig   `yaml:"topics"`
+		Clusters       map[string]ClusterConfig `yaml:"clusters"`
+		Topics         map[string]TopicConfig   `yaml:"topics"`
+		ClusterToTopic map[string]string        `yaml:"cadence-cluster-to-topic"`
 	}
 
 	// ClusterConfig describes the configuration for a single Kafka cluster
@@ -67,6 +68,10 @@ func (k *KafkaConfig) NewKafkaClient(zLogger *zap.Logger, logger bark.Logger, me
 		client: client,
 		logger: logger,
 	}
+}
+
+func (k *KafkaConfig) getTopicForCadenceCluster(cluster string) string {
+	return k.ClusterToTopic[cluster]
 }
 
 func (k *KafkaConfig) getClusterForTopic(topic string) string {

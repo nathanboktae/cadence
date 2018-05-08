@@ -21,6 +21,7 @@
 package worker
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/uber-common/bark"
@@ -67,13 +68,23 @@ func NewReplicator(clusterMetadata cluster.Metadata, metadataManager persistence
 // Start is called to start replicator
 func (r *Replicator) Start() error {
 	currentClusterName := r.clusterMetadata.GetCurrentClusterName()
+	r.logger.Infof("@@ Current Cluster Name: %v.\n", currentClusterName)
 	for cluster := range r.clusterMetadata.GetAllClusterFailoverVersions() {
+		r.logger.Infof("@@ Target Cluster Name: %v.\n", cluster)
 		if cluster != currentClusterName {
 			consumerName := getConsumerName(currentClusterName, cluster)
 			r.processors = append(r.processors, newReplicationTaskProcessor(cluster, consumerName, r.client,
 				r.config, r.logger, r.metricsClient, r.domainReplicator, r.historyClient))
 		}
 	}
+
+	print := func(value interface{}) string {
+		bytes, _ := json.MarshalIndent(value, "", "  ")
+		return string(bytes)
+	}
+	r.logger.Infof("----------\n")
+	r.logger.Infof("processors: %v.\n", print(r.processors))
+	r.logger.Infof("----------\n")
 
 	for _, processor := range r.processors {
 		if err := processor.Start(); err != nil {

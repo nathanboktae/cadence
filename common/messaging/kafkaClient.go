@@ -21,6 +21,7 @@
 package messaging
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/Shopify/sarama"
@@ -66,6 +67,14 @@ func (c *kafkaClient) NewConsumer(cadenceCluster, consumerName string, concurren
 		},
 		Concurrency: concurrency,
 	}
+
+	print := func(value interface{}) string {
+		bytes, _ := json.MarshalIndent(value, "", "  ")
+		return string(bytes)
+	}
+	c.logger.Infof("!!!!!!!!!!!!!!\n")
+	c.logger.Infof("brokers: %v.\n", print(consumerConfig))
+	c.logger.Infof("!!!!!!!!!!!!!!\n")
 
 	consumer, err := c.client.NewConsumer(consumerConfig)
 	return consumer, err
